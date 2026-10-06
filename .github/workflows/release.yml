@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]" build
+      - name: Tag matches the package version
+        run: test "${GITHUB_REF_NAME#v}" = "$(python -c 'import qaznews_kappa; print(qaznews_kappa.__version__)')"
+      - run: pytest
+      - run: python -m build
+      - name: Publish GitHub release with the wheel and sdist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes
