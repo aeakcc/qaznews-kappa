@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "qaznews-kappa: inter-annotator agreement check for labelled news corpora"
+authors:
+  - family-names: Armanuly
+    given-names: Yerlen
+version: 0.1.0
+date-released: 2026-10-06
+license: MIT
+repository-code: "https://github.com/aeakcc/qaznews-kappa"
+keywords:
+  - inter-annotator agreement
+  - Cohen's kappa
+  - Fleiss' kappa
+  - corpus annotation
+  - Kazakh NLP
