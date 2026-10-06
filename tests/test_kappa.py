@@ -1,6 +1,9 @@
+import json
+
 import pytest
 
 from qaznews_kappa import cohen_kappa, fleiss_kappa, load, report
+from qaznews_kappa.cli import main
 
 # Worked example of the Wikipedia article "Fleiss' kappa": 10 items, 14 raters, 5 categories,
 # counts of raters per category. Published result: kappa = 0.210.
@@ -88,3 +91,29 @@ def test_report_with_missing_label():
 def test_report_needs_two_annotators():
     with pytest.raises(ValueError):
         report({"1": {"a": "x"}, "2": {"a": "y"}})
+
+
+BATCH = "item,annotator,label\n" + "".join(
+    f"{i},ann1,{x}\n{i},ann2,{y}\n" for i, (x, y) in enumerate(["aa", "bb", "aa", "bb", "ab"])
+)
+
+
+def test_cli_text_and_gate(tmp_path, capsys):
+    path = write(tmp_path, BATCH)  # kappa = 0.615
+    assert main([str(path)]) == 0
+    assert "Light's kappa" in capsys.readouterr().out
+    assert main([str(path), "--min-kappa", "0.6"]) == 0
+    assert main([str(path), "--min-kappa", "0.7"]) == 1
+    assert "FAIL" in capsys.readouterr().out
+
+
+def test_cli_json(tmp_path, capsys):
+    assert main([str(write(tmp_path, BATCH)), "--json", "--min-kappa", "0.7"]) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out["passed"] is False and out["kappa"] == pytest.approx(0.6154, abs=1e-4)
+
+
+def test_cli_bad_input(tmp_path, capsys):
+    assert main([str(tmp_path / "missing.csv")]) == 2
+    assert main([str(write(tmp_path, "id,label\n"))]) == 2
+    assert "missing column" in capsys.readouterr().err
