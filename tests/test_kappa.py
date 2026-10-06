@@ -1,4 +1,5 @@
 import json
+import random
 
 import pytest
 
@@ -117,3 +118,19 @@ def test_cli_bad_input(tmp_path, capsys):
     assert main([str(tmp_path / "missing.csv")]) == 2
     assert main([str(write(tmp_path, "id,label\n"))]) == 2
     assert "missing column" in capsys.readouterr().err
+
+
+def test_matches_reference_implementations():
+    """Random batches against scikit-learn and statsmodels (runs only where they are installed)."""
+    metrics = pytest.importorskip("sklearn.metrics")
+    inter_rater = pytest.importorskip("statsmodels.stats.inter_rater")
+    rng = random.Random(1)
+    for _ in range(200):
+        n, m, k = rng.randint(5, 80), rng.randint(2, 6), rng.randint(2, 6)
+        rows = [[rng.randrange(k) for _ in range(m)] for _ in range(n)]
+        a, b = [r[0] for r in rows], [r[1] for r in rows]
+        if (ours := cohen_kappa(a, b)) is not None:
+            assert ours == pytest.approx(metrics.cohen_kappa_score(a, b), abs=1e-12)
+        if (ours := fleiss_kappa(rows)) is not None:
+            table, _ = inter_rater.aggregate_raters(rows)
+            assert ours == pytest.approx(inter_rater.fleiss_kappa(table), abs=1e-12)
