@@ -1,0 +1,19 @@
+# docker compose -f jenkins/compose.yaml up -d --build   ->   http://localhost:8080
+# jenkins/.env (not in Git): JENKINS_ADMIN_PASSWORD=...  DOCKER_GID=$(getent group docker | cut -d: -f3)
+services:
+  jenkins:
+    build: .
+    image: qaznews-jenkins
+    ports:
+      - "127.0.0.1:8080:8080"
+    group_add:
+      - "${DOCKER_GID:?set DOCKER_GID in jenkins/.env}"
+    environment:
+      JENKINS_ADMIN_PASSWORD: "${JENKINS_ADMIN_PASSWORD:?set JENKINS_ADMIN_PASSWORD in jenkins/.env}"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
