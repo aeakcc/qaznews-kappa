@@ -76,6 +76,20 @@ r = report(load("examples/batch_ok.csv"))
 print(r["kappa"], r["fleiss"])
 ```
 
+## Docker
+
+The `Dockerfile` has a `test` target (pytest, ruff, example batches) and a runtime target with
+only the installed tool, running as an unprivileged user.
+
+```bash
+docker build -t qaznews-kappa .
+docker run --rm -v "$PWD/examples:/data:ro" qaznews-kappa /data/batch_ok.csv --min-kappa 0.7
+docker run --rm -i qaznews-kappa /dev/stdin < examples/batch_ok.csv   # input from stdin
+
+docker build --target test -t qaznews-kappa:test .
+docker run --rm qaznews-kappa:test                                     # unit tests
+```
+
 ## Measures
 
 For two annotators with observed agreement $p_o$ and chance agreement $p_e$ (from each
