@@ -154,7 +154,7 @@ and waits for the gate to pass. Jenkins reaches the cluster API over the shared 
 `kind`, so create it once before the first start: `docker network create kind`.
 
 To release: raise `__version__` in `src/qaznews_kappa/__init__.py`, merge, then
-`git tag v0.2.0 && git push origin v0.2.0`.
+`git tag v0.3.0 && git push origin v0.3.0`.
 
 ## Citation
 

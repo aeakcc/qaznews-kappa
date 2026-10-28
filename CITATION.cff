@@ -4,8 +4,8 @@ title: "qaznews-kappa: inter-annotator agreement check for labelled news corpora
 authors:
   - family-names: Armanuly
     given-names: Yerlen
-version: 0.1.0
-date-released: 2026-10-06
+version: 0.2.0
+date-released: 2026-10-28
 license: MIT
 repository-code: "https://github.com/aeakcc/qaznews-kappa"
 keywords:
