@@ -1,4 +1,5 @@
 # docker compose -f jenkins/compose.yaml up -d --build   ->   http://localhost:8080
+# once: docker network create kind  (shared with the kind cluster, so Jenkins reaches its API)
 # jenkins/.env (not in Git): JENKINS_ADMIN_PASSWORD=...  DOCKER_GID=$(getent group docker | cut -d: -f3)
 services:
   jenkins:
@@ -13,7 +14,12 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
+    networks: [default, kind]
     restart: unless-stopped
 
 volumes:
   jenkins_home:
+
+networks:
+  kind:
+    external: true

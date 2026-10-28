@@ -134,7 +134,8 @@ are installed (`pip install scikit-learn statsmodels`) and always runs in CI.
 - [`Jenkinsfile`](Jenkinsfile) is the same check on a self-hosted Jenkins server, for every
   branch: it builds the `test` image, runs ruff and the unit tests inside it (results go to
   the Jenkins test report), builds the runtime image tagged with the short commit hash and
-  runs the agreement gate on the example batch with that image.
+  runs the agreement gate on the example batch with that image. Builds of `main` are then
+  deployed to a local Kubernetes cluster (below).
 
 The Jenkins server is defined in [`jenkins/`](jenkins): the controller image with its plugins,
 [`casc.yaml`](jenkins/casc.yaml) (admin user and the multibranch job, which checks the
@@ -144,6 +145,13 @@ repository every minute) and a Compose file. It runs builds on the host Docker e
 printf 'JENKINS_ADMIN_PASSWORD=%s\nDOCKER_GID=%s\n' "<password>" "$(getent group docker | cut -d: -f3)" > jenkins/.env
 docker compose -f jenkins/compose.yaml up -d --build      # http://localhost:8080, user admin
 ```
+
+Deployment: on `main` the pipeline starts a [kind](https://kind.sigs.k8s.io) cluster named
+`qaznews` if it is not running, loads the new image into it, puts the batches into the
+ConfigMap `qaznews-batches` and applies [`k8s/cronjob.yaml`](k8s/cronjob.yaml), a CronJob that
+checks the batch every night at 02:00 Almaty time. Jenkins then runs one job from the CronJob
+and waits for the gate to pass. Jenkins reaches the cluster API over the shared Docker network
+`kind`, so create it once before the first start: `docker network create kind`.
 
 To release: raise `__version__` in `src/qaznews_kappa/__init__.py`, merge, then
 `git tag v0.2.0 && git push origin v0.2.0`.

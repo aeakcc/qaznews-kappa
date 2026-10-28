@@ -1,0 +1,40 @@
+# Nightly agreement check of the annotation batches in the ConfigMap qaznews-batches.
+# The Jenkinsfile creates the ConfigMap, sets the image tag and starts one run after each deploy.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: qaznews-kappa
+  labels:
+    app: qaznews-kappa
+spec:
+  schedule: "0 2 * * *"
+  timeZone: Asia/Almaty
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 0  # a failed gate is a result, not a crash to retry
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app: qaznews-kappa
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: qaznews-kappa
+              image: qaznews-kappa:latest
+              imagePullPolicy: IfNotPresent
+              args: ["/data/batch_ok.csv", "--min-kappa", "0.7"]
+              resources:
+                limits: { cpu: 500m, memory: 128Mi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+              volumeMounts:
+                - name: batches
+                  mountPath: /data
+                  readOnly: true
+          volumes:
+            - name: batches
+              configMap:
+                name: qaznews-batches
