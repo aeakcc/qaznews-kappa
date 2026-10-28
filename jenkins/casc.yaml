@@ -1,0 +1,32 @@
+jenkins:
+  systemMessage: "CI/CD for github.com/aeakcc/qaznews-kappa. Configuration as code: jenkins/casc.yaml"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: ${JENKINS_ADMIN_PASSWORD}
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: true
+unclassified:
+  location:
+    url: http://localhost:8080/
+jobs:
+  - script: |
+      multibranchPipelineJob('qaznews-kappa') {
+        description('Every branch of https://github.com/aeakcc/qaznews-kappa that has a Jenkinsfile')
+        branchSources {
+          git {
+            id('qaznews-kappa')
+            remote('https://github.com/aeakcc/qaznews-kappa.git')
+          }
+        }
+        triggers {
+          periodicFolderTrigger { interval('1m') }
+        }
+        orphanedItemStrategy {
+          discardOldItems { numToKeep(10) }
+        }
+      }
